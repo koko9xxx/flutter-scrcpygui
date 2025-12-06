@@ -370,6 +370,11 @@ class ScrcpyUtils {
     required ScrcpyConfig config,
     required AdbDevices device,
   }) async {
+    // Auto-arrange is only supported on desktop platforms
+    if (Platform.isAndroid || Platform.isIOS) {
+      return config;
+    }
+
     ScrcpyConfig res = config;
     final display = (await screenRetriever.getPrimaryDisplay());
     final screenSize = display.size;

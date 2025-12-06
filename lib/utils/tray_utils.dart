@@ -32,6 +32,11 @@ class TrayUtils {
   }
 
   static Future<void> initTray(WidgetRef ref, BuildContext context) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Mobile platforms don't support system tray
+      return;
+    }
+
     final behaviour = ref.read(settingsProvider.select((s) => s.behaviour));
 
     if (behaviour.traySupport) {
@@ -47,6 +52,11 @@ class TrayUtils {
   }
 
   static Future<Menu> trayMenu(WidgetRef ref, BuildContext context) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Mobile platforms don't support system tray
+      return Menu(items: []);
+    }
+
     final connected = ref.read(adbProvider);
     final configs = ref.read(configsProvider);
     final running = ref.read(scrcpyInstanceProvider);

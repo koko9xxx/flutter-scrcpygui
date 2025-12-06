@@ -59,8 +59,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
   @override
   void initState() {
     _init();
-    windowManager.addListener(this);
-    trayManager.addListener(this);
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      windowManager.addListener(this);
+      trayManager.addListener(this);
+    }
     try {
       discovery = BonsoirDiscovery(type: adbMdns);
     } on Exception catch (e) {
@@ -72,8 +74,10 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
-    trayManager.removeListener(this);
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      windowManager.removeListener(this);
+      trayManager.removeListener(this);
+    }
     GoRouter.of(context)
         .routeInformationProvider
         .removeListener(_killTestInstance);
@@ -87,6 +91,11 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void onWindowEvent(String eventName) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      super.onWindowEvent(eventName);
+      return;
+    }
+
     if (eventName == kWindowEventClose) {
       await AppUtils.onAppCloseRequested(ref, context);
     }
@@ -111,12 +120,19 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
   @override
   void onTrayIconRightMouseDown() {
-    trayManager.popUpContextMenu();
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      trayManager.popUpContextMenu();
+    }
     super.onTrayIconRightMouseDown();
   }
 
   @override
   void onTrayIconMouseDown() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      super.onTrayIconMouseDown();
+      return;
+    }
+
     final visible = await windowManager.isVisible();
 
     if (visible) {
@@ -136,7 +152,9 @@ class _MainScreenState extends ConsumerState<MainScreen>
 
     ref.listen(adbProvider, (previous, next) async {
       if (!listEquals(previous, next)) {
-        await TrayUtils.initTray(ref, context);
+        if (!Platform.isAndroid && !Platform.isIOS) {
+          await TrayUtils.initTray(ref, context);
+        }
       }
     });
 
