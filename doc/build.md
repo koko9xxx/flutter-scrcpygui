@@ -18,7 +18,7 @@ cd flutter-scrcpygui
 fvm install 3.35.1
 fvm use 3.35.1
 fvm flutter pub get
-fvm flutter build linux/windows/mac --release
+fvm flutter build linux/windows/mac/apk --release
 ```
 
 ## Built exec location
@@ -33,4 +33,8 @@ build\windows\x64\runner\release
 - mac
 ```
 build/macos/Build/Products/Release/Scrcpy GUI.app
+```
+- android
+```
+build/app/outputs/flutter-apk/app-release.apk
 ```
