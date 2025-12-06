@@ -20,6 +20,9 @@ Download the latest pre-built binaries from the [releases page](https://github.c
 winget install pizi.scrcpygui
 ```
 
+#### Android APK
+For Android, download the APK from the [GitHub Actions artifacts](../../actions/workflows/build-android.yaml) or build from source.
+
 
 
 ### Build from Source
@@ -42,6 +45,7 @@ For those who prefer to build from source, follow the instructions in the [Build
 *   Windows (64-bit)
 *   Linux (64-bit)
 *   MacOS (64-bit) - Intel / Apple Silicon
+*   Android (Experimental - APK available via GitHub Actions)
 
 
 
