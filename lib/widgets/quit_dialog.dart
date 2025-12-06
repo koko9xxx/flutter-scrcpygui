@@ -164,7 +164,9 @@ class _QuitDialogState extends ConsumerState<QuitDialog> {
   }
 
   Future<void> _onClose(bool wifi, bool instance) async {
-    await windowManager.setPreventClose(true);
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      await windowManager.setPreventClose(true);
+    }
     setState(() {
       loading = true;
     });
@@ -201,7 +203,7 @@ class _QuitDialogState extends ConsumerState<QuitDialog> {
       }
     }
 
-    if (settings.behaviour.rememberWinSize) {
+    if (settings.behaviour.rememberWinSize && !Platform.isAndroid && !Platform.isIOS) {
       final size = await windowManager.getSize();
       await Db.saveWinSize(size);
     }
@@ -212,9 +214,11 @@ class _QuitDialogState extends ConsumerState<QuitDialog> {
       Process.killPid(trackDevicesPID);
     }
 
-    await windowManager.isPreventClose();
-    await windowManager.setPreventClose(false);
-    await windowManager.destroy();
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      await windowManager.isPreventClose();
+      await windowManager.setPreventClose(false);
+      await windowManager.destroy();
+    }
     exit(0);
   }
 }

@@ -80,7 +80,7 @@ class AppUtils {
         builder: (context) => const Center(child: QuitDialog()),
       );
     } else {
-      if (settings.behaviour.rememberWinSize) {
+      if (settings.behaviour.rememberWinSize && !Platform.isAndroid && !Platform.isIOS) {
         final size = await windowManager.getSize();
         await Db.saveWinSize(size);
       }
@@ -91,15 +91,22 @@ class AppUtils {
         Process.killPid(trackDevicesPID);
       }
 
-      await windowManager.isPreventClose();
-      await windowManager.setPreventClose(false);
-      await windowManager.destroy();
+      if (!Platform.isAndroid && !Platform.isIOS) {
+        await windowManager.isPreventClose();
+        await windowManager.setPreventClose(false);
+        await windowManager.destroy();
+      }
       exit(0);
     }
   }
 
   static Future<void> onAppMinimizeRequested(
       WidgetRef ref, BuildContext context) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Mobile platforms don't support minimize to tray
+      return;
+    }
+
     final behaviour = ref.read(settingsProvider).behaviour;
 
     switch (behaviour.minimizeAction) {
@@ -112,6 +119,11 @@ class AppUtils {
   }
 
   static Future<void> onAppMaximizeRequested() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Mobile platforms don't support window maximize
+      return;
+    }
+
     bool isMaximized = await windowManager.isMaximized();
 
     if (isMaximized) {

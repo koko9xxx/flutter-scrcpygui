@@ -149,35 +149,13 @@ class _AppGridIconState extends ConsumerState<AppGridIcon> {
           allConfigs.firstWhereOrNull((c) => c.id == configForPinned?.id);
     }
 
-    return DropRegion(
-      formats: [...Formats.standardFormats, ...imageFormats],
-      hitTestBehavior: HitTestBehavior.opaque,
-      onDropOver: (p0) {
-        setState(() {
-          _onDropHover = true;
-        });
-
-        return p0.session.allowedOperations.firstOrNull ?? DropOperation.none;
-      },
-      onDropEnded: (p0) {
-        setState(() {
-          _onDropHover = false;
-        });
-      },
-      onDropEnter: (p0) {},
-      onDropLeave: (p0) {
-        setState(() {
-          _onDropHover = false;
-        });
-      },
-      onPerformDrop: _onPerformDrop,
-      child: ContextMenu(
-        items: _buildContextMenu(isMissingConfig, isPinned, config, theme,
-            devicePair, configForPinned, overrides),
-        child: AnimatedScale(
-          duration: 200.milliseconds,
-          scale: _onDropHover ? 1.2 : 1,
-          child: Stack(
+    final widgetChild = ContextMenu(
+      items: _buildContextMenu(isMissingConfig, isPinned, config, theme,
+          devicePair, configForPinned, overrides),
+      child: AnimatedScale(
+        duration: 200.milliseconds,
+        scale: _onDropHover ? 1.2 : 1,
+        child: Stack(
             fit: StackFit.expand,
             children: [
               Button(
@@ -304,6 +282,37 @@ class _AppGridIconState extends ConsumerState<AppGridIcon> {
           ),
         ),
       ),
+    );
+
+    // On mobile platforms, return the widget directly without DropRegion
+    if (Platform.isAndroid || Platform.isIOS) {
+      return widgetChild;
+    }
+
+    // On desktop platforms, wrap with DropRegion for drag and drop support
+    return DropRegion(
+      formats: [...Formats.standardFormats, ...imageFormats],
+      hitTestBehavior: HitTestBehavior.opaque,
+      onDropOver: (p0) {
+        setState(() {
+          _onDropHover = true;
+        });
+
+        return p0.session.allowedOperations.firstOrNull ?? DropOperation.none;
+      },
+      onDropEnded: (p0) {
+        setState(() {
+          _onDropHover = false;
+        });
+      },
+      onDropEnter: (p0) {},
+      onDropLeave: (p0) {
+        setState(() {
+          _onDropHover = false;
+        });
+      },
+      onPerformDrop: _onPerformDrop,
+      child: widgetChild,
     );
   }
 

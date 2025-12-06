@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:go_router/go_router.dart';
 import 'package:go_transitions/go_transitions.dart';
 import 'package:localization/localization.dart';
@@ -25,29 +24,64 @@ import 'package:scrcpygui/screens/about_tab/about_tab.dart';
 import 'package:scrcpygui/utils/const.dart';
 import 'package:scrcpygui/utils/custom_scheme.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+
+// Desktop-only imports
+import 'package:flutter_single_instance/flutter_single_instance.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await windowManager.ensureInitialized();
-
   final settings = await Db.getAppSettings();
 
-  final lastWinSize = await Db.getWinSize();
+  // Only use window manager on desktop platforms
+  if (Platform.isAndroid || Platform.isIOS) {
+    // Mobile platforms - run directly without window manager
+    runApp(
+      ProviderScope(
+        child: MyApp(settings: settings),
+      ),
+    );
+  } else {
+    // Desktop platforms
+    await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = WindowOptions(
-    size:
-        settings.behaviour.rememberWinSize ? lastWinSize : const Size(500, 600),
-    minimumSize: Size(500, 600),
-    center: true,
-    skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.hidden,
-    windowButtonVisibility: false,
-  );
+    final lastWinSize = await Db.getWinSize();
 
-  if (Platform.isWindows || Platform.isMacOS) {
-    if (await FlutterSingleInstance().isFirstInstance()) {
+    WindowOptions windowOptions = WindowOptions(
+      size: settings.behaviour.rememberWinSize
+          ? lastWinSize
+          : const Size(500, 600),
+      minimumSize: Size(500, 600),
+      center: true,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.hidden,
+      windowButtonVisibility: false,
+    );
+
+    if (Platform.isWindows || Platform.isMacOS) {
+      if (await FlutterSingleInstance().isFirstInstance()) {
+        windowManager.waitUntilReadyToShow(windowOptions, () async {
+          await windowManager.show();
+          await windowManager.focus();
+        });
+
+        runApp(
+          ProviderScope(
+            child: MyApp(settings: settings),
+          ),
+        );
+      } else {
+        logger.i('App is already running');
+
+        final err = await FlutterSingleInstance().focus();
+
+        if (err != null) {
+          logger.i('Error focusing window: $err');
+        }
+        exit(0);
+      }
+    } else {
       windowManager.waitUntilReadyToShow(windowOptions, () async {
         await windowManager.show();
         await windowManager.focus();
@@ -58,29 +92,7 @@ void main() async {
           child: MyApp(settings: settings),
         ),
       );
-    } else {
-      logger.i('App is already running');
-
-      final err = await FlutterSingleInstance().focus();
-
-      if (err != null) {
-        logger.i('Error focusing window: $err');
-      }
-      exit(0);
     }
-  } else {
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
-
-    Db.getAppSettings().then((settings) {
-      runApp(
-        ProviderScope(
-          child: MyApp(settings: settings),
-        ),
-      );
-    });
   }
 }
 
